@@ -37,7 +37,7 @@ CSV columns:
 
 ## Features
 
-- Command-line запуск через `python main.py`
+- Command-line run `python main.py`
 - Search URL generation for Yellow Pages
 - Multi-page result processing
 - Parsing company listing cards
