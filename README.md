@@ -141,4 +141,3 @@ If `pytest` does not see the `src` package in your environment, the project incl
 - The scraper is designed to continue processing remaining pages when a single page is blocked.
 - `website` is not guaranteed to be present for every listing.
 - Some address parsing details can be refined further depending on downstream requirements.
-- Browser automation is used because plain HTTP requests were not reliable for this source.
