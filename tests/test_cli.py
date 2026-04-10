@@ -1,3 +1,4 @@
+# Tests for pages_int (--max-pages validation).
 import argparse
 import pytest
 

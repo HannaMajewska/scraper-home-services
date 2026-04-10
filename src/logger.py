@@ -1,3 +1,4 @@
+# Logging setup: console and file (INFO level).
 import logging
 from pathlib import Path
 

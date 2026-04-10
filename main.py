@@ -1,3 +1,4 @@
+# Application entrypoint: CLI args, logging, scraping, deduplication, and CSV export.
 import logging
 from pathlib import Path
 

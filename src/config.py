@@ -1,3 +1,4 @@
+# Single-run settings: keyword, city, and max result pages.
 from dataclasses import dataclass
 
 

@@ -1,3 +1,4 @@
+# Tests for Yellow Pages search URL building (build_search_url).
 from src.yp_search import build_search_url
 
 

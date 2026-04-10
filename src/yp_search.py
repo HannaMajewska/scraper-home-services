@@ -1,3 +1,4 @@
+# Builds Yellow Pages search URLs from keyword, city, and page number.
 from urllib.parse import urlencode
 
 BASE_SEARCH_URL = "https://www.yellowpages.com/search"

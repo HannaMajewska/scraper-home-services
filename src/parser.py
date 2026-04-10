@@ -1,3 +1,4 @@
+# Parses search result HTML: listing cards and block-page markers (e.g. Cloudflare).
 from bs4 import BeautifulSoup
 
 from src.models import BusinessListing

@@ -1,3 +1,4 @@
+# Command-line argument parsing for the scraper.
 import argparse
 
 

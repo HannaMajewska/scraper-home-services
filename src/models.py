@@ -1,3 +1,4 @@
+# Data model for one business listing and row dict for CSV export.
 from dataclasses import asdict, dataclass
 
 

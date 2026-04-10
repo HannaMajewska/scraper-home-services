@@ -1,3 +1,4 @@
+# Exports listings to CSV with field normalization.
 import csv
 from pathlib import Path
 

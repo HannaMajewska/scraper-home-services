@@ -1,3 +1,4 @@
+# Pytest bootstrap: add project root to sys.path so `src` imports resolve.
 import sys
 from pathlib import Path
 
