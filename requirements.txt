@@ -1,4 +1,7 @@
-# Dependencies: HTML parsing, browser automation, test runner.
+# Dependencies: HTML parsing, browser automation, test runner, web dashboard.
 beautifulsoup4~=4.14.3
 playwright~=1.58.0
 pytest~=9.0.3
+fastapi~=0.115.0
+uvicorn[standard]~=0.32.0
+openpyxl~=3.1.5
