@@ -33,61 +33,18 @@ Python tool for collecting **public** local business listings from **Yellow Page
 
 After starting `uvicorn`, open **http://127.0.0.1:8000/**. The UI has two tabs: **Run** (active job and results table) and **Results history** (recent jobs).
 
-Add screenshots under **`docs/screenshots/`** (folder is tracked in the repo). Adjust filenames in the links below if you use different names.
+<img width="1920" height="1396" alt="screencapture-127-0-0-1-8000-2026-04-13-22_12_22" src="https://github.com/user-attachments/assets/12bdb712-88d2-4952-b8f7-8f90e4977c17" />
 
-### Header and navigation
 
-*Screenshot: site title, **Run** and **Results history** tabs.*
+### Results table
 
-![Header and tabs](docs/screenshots/ui-01-header-tabs.png)
+<img width="1920" height="3006" alt="screencapture-127-0-0-1-8000-2026-04-13-22_13_46" src="https://github.com/user-attachments/assets/a121bb51-c2b7-4e45-bad5-c0e52e349dff" />
 
-### Run tab — start a job
 
-*Screenshot: CLI command field, start controls, CSV/XLSX toggles.*
+### Results history and Recent runs table
 
-![Scrape launch form](docs/screenshots/ui-02-run-form.png)
+<img width="1899" height="775" alt="Screenshot 2026-04-13 at 22 15 49" src="https://github.com/user-attachments/assets/ff5dc1c7-bb7d-4480-8332-399c49fdf4f8" />
 
-### Run tab — run summary
-
-*Screenshot: **Run summary** (keyword, city, status, page and record counters).*
-
-![Run summary](docs/screenshots/ui-03-run-summary.png)
-
-### Run tab — Results table
-
-*Screenshot: results grid (company, website, phone, category, etc.); row checkboxes; sort on **Company name** and **Category**.*
-
-![Results table](docs/screenshots/ui-04-results-table.png)
-
-### Filters and controls
-
-*Screenshot: company search, city/category filters, custom **Any website** dropdown, **Rows per page** in the same visual style, **Apply filters**.*
-
-![Filters and rows per page](docs/screenshots/ui-05-filters-per-page.png)
-
-### Bulk actions on Results
-
-*Screenshot: bar showing **N row(s) selected**, **Select all**, **Delete selected** (visible when at least one row is checked).*
-
-![Results bulk actions](docs/screenshots/ui-06-results-bulk-actions.png)
-
-### Pagination and downloads
-
-*Screenshot: pagination and **Download CSV** / **Download Excel** links.*
-
-![Pagination and downloads](docs/screenshots/ui-07-pagination-downloads.png)
-
-### Results history tab
-
-*Screenshot: **Recent runs** table (zebra rows, status pills, **Open** in Actions).*
-
-![Run history table](docs/screenshots/ui-08-history-table.png)
-
-### Bulk actions in history
-
-*Screenshot: checked rows, **Select all** / **Delete selected** for runs.*
-
-![History bulk actions](docs/screenshots/ui-09-history-bulk-actions.png)
 
 ---
 
