@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#0c0f14" />
+  <title>Local Business Directory Scraper</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner layout">
+      <div class="header-titles">
+        <h1 class="site-title">Local Business Directory Scraper</h1>
+        <p class="site-tagline">
+          Search public Yellow Pages listings by category and city, then export the results.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs layout" role="tablist" aria-label="Main">
+    <button type="button" class="tab active" role="tab" aria-selected="true" data-tab="run">Run scraper</button>
+    <button type="button" class="tab" role="tab" aria-selected="false" data-tab="history">Results history</button>
+  </nav>
+
+  <main id="panel-run" class="panel layout" role="tabpanel">
+    <section class="metrics" aria-label="Run metrics">
+      <div class="metric-card">
+        <div class="metric-label">Unique companies</div>
+        <div id="metric-unique" class="metric-value">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Pages processed</div>
+        <div id="metric-pages" class="metric-value">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Blocked pages</div>
+        <div id="metric-blocked" class="metric-value">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Run time</div>
+        <div id="metric-time" class="metric-value">—</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">Start a new scrape</h2>
+      <form id="scrape-form" novalidate>
+        <label for="cli-line" class="cli-label">Command</label>
+        <div class="cli-console" role="group" aria-label="Terminal command">
+          <span class="cli-prompt" aria-hidden="true">$</span>
+          <input
+            id="cli-line"
+            name="command"
+            type="text"
+            class="cli-input"
+            spellcheck="false"
+            autocomplete="off"
+            value='python main.py --keyword plumber --city "Austin, TX" --max-pages 1'
+          />
+        </div>
+        <p class="field-hint cli-hint">
+          You can paste the full line including <code>python main.py</code>, or only the flags:
+          <code>--keyword … --city … --max-pages …</code>
+        </p>
+        <fieldset class="fieldset">
+          <legend>Output format (dashboard export)</legend>
+          <label class="check"><input type="checkbox" id="fmt-csv" checked /> CSV</label>
+          <label class="check"><input type="checkbox" id="fmt-xlsx" checked /> Excel (XLSX)</label>
+        </fieldset>
+        <div id="form-errors" class="alert alert-error hidden" role="alert"></div>
+        <div class="form-actions">
+          <button type="submit" id="btn-start" class="btn btn-primary">Start scraping</button>
+          <button type="button" id="btn-reset" class="btn btn-secondary">Reset</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card status-card">
+      <h2 class="card-title">Run status</h2>
+      <div id="status-line" class="status-line">
+        <span id="status-label" class="status-pill status-idle">Idle</span>
+        <span id="status-started" class="status-meta"></span>
+      </div>
+      <div class="progress-wrap" aria-hidden="true">
+        <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+      </div>
+      <p id="progress-text" class="progress-text">No active job.</p>
+      <pre id="run-log" class="run-log" aria-label="Run log snippet"></pre>
+    </section>
+
+    <div id="alerts" class="alerts" role="region" aria-label="Warnings and errors"></div>
+
+    <section class="card summary-card">
+      <h2 class="card-title">Run summary</h2>
+      <dl id="summary-dl" class="summary-dl">
+        <div><dt>Keyword</dt><dd id="sum-keyword">—</dd></div>
+        <div><dt>City</dt><dd id="sum-city">—</dd></div>
+        <div><dt>Requested pages</dt><dd id="sum-req">—</dd></div>
+        <div><dt>Parsed pages (ok)</dt><dd id="sum-parsed">—</dd></div>
+        <div><dt>Blocked pages</dt><dd id="sum-blocked">—</dd></div>
+        <div><dt>Raw records</dt><dd id="sum-raw">—</dd></div>
+        <div><dt>Unique records</dt><dd id="sum-uniq">—</dd></div>
+        <div><dt>Output files</dt><dd id="sum-files">—</dd></div>
+        <div><dt>Final status</dt><dd id="sum-final">—</dd></div>
+      </dl>
+    </section>
+
+    <section class="card results-card">
+      <div class="results-header">
+        <h2 class="card-title">Results</h2>
+      </div>
+      <p id="results-empty" class="empty-state hidden">
+        No scrape jobs yet. Enter a keyword and city, then start scraping.
+      </p>
+      <p id="results-none" class="empty-state hidden">
+        No businesses were found for this query.
+      </p>
+      <div id="results-activity" class="results-activity hidden">
+        <p id="results-count" class="results-count" aria-live="polite"></p>
+        <div class="results-export-row">
+          <div class="results-downloads">
+            <a id="dl-csv" class="btn btn-download hidden" href="#" download>Download CSV</a>
+            <a id="dl-xlsx" class="btn btn-download btn-download--secondary hidden" href="#" download>Download Excel</a>
+          </div>
+          <div class="per-page-wrap">
+            <label for="per-page-trigger" class="per-page-label">Rows per page</label>
+            <div class="select-custom" id="per-page-root" data-custom-select="per-page">
+              <input type="hidden" id="per-page-select" value="30" />
+              <button
+                type="button"
+                class="select-custom-trigger"
+                id="per-page-trigger"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+                aria-label="Rows per page"
+              >
+                <span class="select-custom-label" id="per-page-label">30</span>
+                <span class="select-custom-chevron" aria-hidden="true"></span>
+              </button>
+              <ul class="select-custom-list hidden" id="per-page-list" role="listbox">
+                <li role="option" tabindex="-1" data-value="10">10</li>
+                <li role="option" tabindex="-1" data-value="25">25</li>
+                <li role="option" tabindex="-1" data-value="30">30</li>
+                <li role="option" tabindex="-1" data-value="50">50</li>
+                <li role="option" tabindex="-1" data-value="100">100</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="results-toolbar">
+          <input type="search" id="filter-q" class="input-search" placeholder="Search company name…" aria-label="Search company name" />
+          <input type="text" id="filter-city" class="input-filter" placeholder="Filter city" aria-label="Filter by city" />
+          <input type="text" id="filter-category" class="input-filter" placeholder="Filter category" aria-label="Filter by category" />
+          <div class="select-custom" id="filter-website-root" data-custom-select="website">
+            <input type="hidden" id="filter-website" value="" />
+            <button
+              type="button"
+              class="select-custom-trigger"
+              id="filter-website-trigger"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-label="Has website"
+            >
+              <span class="select-custom-label" id="filter-website-label">Any website</span>
+              <span class="select-custom-chevron" aria-hidden="true"></span>
+            </button>
+            <ul class="select-custom-list hidden" id="filter-website-list" role="listbox">
+              <li role="option" tabindex="-1" data-value="">Any website</li>
+              <li role="option" tabindex="-1" data-value="true">Has website</li>
+              <li role="option" tabindex="-1" data-value="false">No website</li>
+            </ul>
+          </div>
+          <button type="button" id="btn-apply-filters" class="btn btn-sm btn-apply-filters">Apply filters</button>
+        </div>
+        <div id="results-bulk-bar" class="history-bulk-bar hidden" role="region" aria-label="Bulk actions for selected results">
+          <span id="results-selected-count" class="history-bulk-count"></span>
+          <div class="history-bulk-actions">
+            <button type="button" id="results-select-all-visible" class="btn btn-secondary btn-sm history-bulk-btn">Select all</button>
+            <button type="button" id="results-delete-selected" class="btn btn-sm history-bulk-btn history-bulk-btn--danger">Delete selected</button>
+          </div>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table" id="data-table">
+          <colgroup>
+            <col class="col-check" />
+            <col class="col-company" />
+            <col class="col-website" />
+            <col class="col-phone" />
+            <col class="col-category" />
+            <col class="col-address" />
+            <col class="col-city" />
+            <col class="col-source" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col" class="th-col-check">
+                <input type="checkbox" id="results-select-all" class="history-check" aria-label="Select all rows on this page" title="Select all" />
+              </th>
+              <th scope="col">
+                <button type="button" class="th-sort-btn" data-sort="company_name">
+                  <span class="th-sort-label">Company name</span>
+                  <span class="th-sort-arrows" aria-hidden="true"><span class="th-arrow th-arrow-up">&#9650;</span><span class="th-arrow th-arrow-down">&#9660;</span></span>
+                </button>
+              </th>
+              <th scope="col" class="th-plain">Website</th>
+              <th scope="col" class="th-plain">Phone</th>
+              <th scope="col">
+                <button type="button" class="th-sort-btn" data-sort="category">
+                  <span class="th-sort-label">Category</span>
+                  <span class="th-sort-arrows" aria-hidden="true"><span class="th-arrow th-arrow-up">&#9650;</span><span class="th-arrow th-arrow-down">&#9660;</span></span>
+                </button>
+              </th>
+              <th scope="col" class="th-plain">Address</th>
+              <th scope="col" class="th-plain">City</th>
+              <th scope="col" class="th-plain">Source URL</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+      <div id="pagination" class="pagination hidden"></div>
+    </section>
+  </main>
+
+  <main id="panel-history" class="panel layout hidden" role="tabpanel" hidden>
+    <section class="card card--history-table">
+      <h2 class="card-title">Recent runs</h2>
+      <div id="history-bulk-bar" class="history-bulk-bar hidden" role="region" aria-label="Bulk actions for selected runs">
+        <span id="history-selected-count" class="history-bulk-count"></span>
+        <div class="history-bulk-actions">
+          <button type="button" id="history-select-all-visible" class="btn btn-secondary btn-sm history-bulk-btn">Select all</button>
+          <button type="button" id="history-delete-selected" class="btn btn-sm history-bulk-btn history-bulk-btn--danger">Delete selected</button>
+        </div>
+      </div>
+      <p id="history-empty" class="empty-state">No runs recorded yet.</p>
+      <div class="table-scroll table-scroll--history">
+        <table class="data-table data-table-history" id="history-table">
+          <colgroup>
+            <col class="col-h-check" />
+            <col class="col-h-keyword" />
+            <col class="col-h-city" />
+            <col class="col-h-pages" />
+            <col class="col-h-status" />
+            <col class="col-h-created" />
+            <col class="col-h-records" />
+            <col class="col-h-actions" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col" class="th-history-check">
+                <input type="checkbox" id="history-select-all" class="history-check history-check--header" aria-label="Select all runs in the list" title="Select all" />
+              </th>
+              <th scope="col">Keyword</th>
+              <th scope="col">City</th>
+              <th scope="col">Pages</th>
+              <th scope="col">Status</th>
+              <th scope="col">Created</th>
+              <th scope="col">Records</th>
+              <th scope="col" class="th-history-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
