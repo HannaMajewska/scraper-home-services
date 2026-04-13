@@ -1,134 +1,130 @@
 # Local Business Directory Scraper for USA Home Services
 
-Сбор публичных карточек локального бизнеса с Yellow Pages по категории и городу (США): постраничный обход, нормализация данных, дедупликация, экспорт **CSV** / **Excel** и **веб-панель** для запуска задач и работы с результатами.
+Python tool for collecting **public** local business listings from **Yellow Pages** by category (keyword) and US city: multi-page traversal, normalization, deduplication, **CSV** / **Excel** export, and an optional **FastAPI web dashboard** to run jobs and work with results.
 
 ---
 
-## Ценность для бизнеса
+## Business value
 
-- **Ускоряет сбор рыночных данных** — вместо ручного копирования контактов из каталога вы получаете структурированную таблицу за один прогон.
-- **Снижает операционные затраты** — одна команда или клик в панели заменяет часы рутины для отделов продаж, маркетинга и аналитики.
-- **Даёт воспроизводимый процесс** — параметры поиска (ключевое слово, город, число страниц) фиксируются; результаты и артефакты прогона лежат в папке run.
-- **Поддерживает дальнейшую обработку** — единый формат строк (название, сайт, телефон, категория, адрес, город, URL источника) удобно отдавать в CRM, обогащение или отчёты.
+- **Faster market data collection** — turn catalog pages into a structured table in one run instead of manual copy-paste.
+- **Lower operational cost** — one CLI command or a few clicks in the dashboard replace hours of repetitive work for sales, marketing, and analytics teams.
+- **Repeatable process** — search parameters (keyword, city, page depth) are explicit; each run stores outputs and artifacts under a dedicated run folder.
+- **Downstream-ready rows** — a single schema (company name, website, phone, category, address, city, source URL) fits CRM import, enrichment pipelines, and reporting.
 
-## Какие проблемы решает сервис
+## Problems this service addresses
 
-| Проблема | Как помогает решение |
-|----------|----------------------|
-| Нет единого списка компаний по нише и гео | Парсинг выдачи Yellow Pages с заданным ключом и городом |
-| Дубли и «грязные» поля вручную | Нормализация записей и дедупликация перед экспортом |
-| Нужны и «разовый скрипт», и удобный UI | CLI для автоматизации + дашборд для операторов |
-| Блокировки и нестабильные страницы | Playwright (Chromium); при блокировке отдельных страниц прогон продолжается |
-| Нужны Excel и отбор строк | Экспорт XLSX; в панели — фильтры, сортировка, удаление выбранных строк из прогона |
+| Challenge | How this project helps |
+|-----------|------------------------|
+| No single list of businesses for a niche and geography | Parses Yellow Pages results for a given keyword and city |
+| Duplicates and messy fields when done by hand | Normalizes records and deduplicates before export |
+| Need both automation (CLI) and a friendly UI | CLI for scripts and CI; dashboard for operators |
+| Unstable pages and bot challenges | Playwright (Chromium); blocked pages do not stop the whole run |
+| Need Excel and row-level cleanup | XLSX export; dashboard filters, sorting, and removal of selected rows from a run |
 
-## Цели продукта
+## Product goals
 
-1. **Надёжно** доставать карточки бизнеса из открытого каталога в допустимых условиях использования сайта.
-2. **Предсказуемо** отдавать данные в табличном виде для бизнес-процессов.
-3. **Удобно** сопровождать цикл «запуск → мониторинг → выгрузка → правка списка» через веб-интерфейс без обязательного знания CLI.
-
----
-
-## Интерфейс веб-панели: обзор
-
-После запуска `uvicorn` откройте **http://127.0.0.1:8000/** . Интерфейс состоит из вкладок **Run** (текущий прогон и таблица результатов) и **Results history** (недавние запуски).
-
-Ниже — места для скриншотов. Положите файлы в каталог **`docs/screenshots/`** (его можно создать вручную) и при необходимости поправьте имена в ссылках.
-
-### Общий вид: шапка и навигация
-
-*Скриншот: логотип/заголовок, вкладки Run и Results history.*
-
-![Шапка и вкладки](docs/screenshots/ui-01-header-tabs.png)
-
-### Вкладка Run — запуск задачи
-
-*Скриншот: поле CLI-команды, кнопки старта, опции CSV/XLSX.*
-
-![Форма запуска scrape](docs/screenshots/ui-02-run-form.png)
-
-### Вкладка Run — сводка по прогону
-
-*Скриншот: блок Run summary (keyword, city, статус, счётчики страниц и записей).*
-
-![Сводка по прогону](docs/screenshots/ui-03-run-summary.png)
-
-### Вкладка Run — таблица Results
-
-*Скриншот: таблица с колонками компании, сайта, телефона, категории и т.д.; чекбоксы слева; сортировка по Company name и Category.*
-
-![Таблица результатов](docs/screenshots/ui-04-results-table.png)
-
-### Фильтры и элементы управления
-
-*Скриншот: поиск по названию, фильтры по городу и категории, кастомный список **Any website** (как у выпадающего UI), **Rows per page** в том же визуальном стиле, кнопка Apply filters.*
-
-![Фильтры и переключатель строк на странице](docs/screenshots/ui-05-filters-per-page.png)
-
-### Массовые действия в Results
-
-*Скриншот: панель с текстом «N rows selected», кнопки **Select all** и **Delete selected** (появляется при отмеченных строках).*
-
-![Массовые действия в таблице Results](docs/screenshots/ui-06-results-bulk-actions.png)
-
-### Пагинация и выгрузки
-
-*Скриншот: блок пагинации и ссылки Download CSV / Download Excel.*
-
-![Пагинация и выгрузки](docs/screenshots/ui-07-pagination-downloads.png)
-
-### Вкладка Results history
-
-*Скриншот: таблица Recent runs (зебра-строки, статусы-плашки, колонка Actions с **Open**).*
-
-![История запусков](docs/screenshots/ui-08-history-table.png)
-
-### Массовые действия в истории
-
-*Скриншот: отмеченные строки, панель **Select all** / **Delete selected** для прогонов.*
-
-![Массовые действия в истории](docs/screenshots/ui-09-history-bulk-actions.png)
+1. **Reliably** extract listing cards from the public directory within normal site use and your own compliance review.
+2. **Predictably** deliver tabular data for business workflows.
+3. **Smoothly** support the loop **run → monitor → export → edit the list** in the browser without requiring CLI expertise.
 
 ---
 
-## Возможности интерфейса (кратко)
+## Dashboard UI overview
 
-| Область | Возможности |
-|---------|-------------|
-| **Запуск** | Вставка той же CLI-строки, что и в терминале; флаги экспорта CSV и Excel |
-| **Мониторинг** | Статус прогона, сводка по страницам и записям |
-| **Таблица Results** | Сортировка по названию компании и категории; фильтры; чекбоксы; выбор «все на странице»; удаление выбранных строк из текущего run (с обновлением экспортов на диске) |
-| **Постраничность** | Настраиваемое число строк на странице (10–100), общий стиль выпадающих списков с фильтром по сайту |
-| **История** | Список недавних run, открытие прогона, множественный выбор, удаление завершённых/неактивных прогонов (активные queued/running не удаляются) |
-| **Выгрузки** | Скачивание CSV и XLSX для завершённого прогона с данными |
+After starting `uvicorn`, open **http://127.0.0.1:8000/**. The UI has two tabs: **Run** (active job and results table) and **Results history** (recent jobs).
+
+Add screenshots under **`docs/screenshots/`** (folder is tracked in the repo). Adjust filenames in the links below if you use different names.
+
+### Header and navigation
+
+*Screenshot: site title, **Run** and **Results history** tabs.*
+
+![Header and tabs](docs/screenshots/ui-01-header-tabs.png)
+
+### Run tab — start a job
+
+*Screenshot: CLI command field, start controls, CSV/XLSX toggles.*
+
+![Scrape launch form](docs/screenshots/ui-02-run-form.png)
+
+### Run tab — run summary
+
+*Screenshot: **Run summary** (keyword, city, status, page and record counters).*
+
+![Run summary](docs/screenshots/ui-03-run-summary.png)
+
+### Run tab — Results table
+
+*Screenshot: results grid (company, website, phone, category, etc.); row checkboxes; sort on **Company name** and **Category**.*
+
+![Results table](docs/screenshots/ui-04-results-table.png)
+
+### Filters and controls
+
+*Screenshot: company search, city/category filters, custom **Any website** dropdown, **Rows per page** in the same visual style, **Apply filters**.*
+
+![Filters and rows per page](docs/screenshots/ui-05-filters-per-page.png)
+
+### Bulk actions on Results
+
+*Screenshot: bar showing **N row(s) selected**, **Select all**, **Delete selected** (visible when at least one row is checked).*
+
+![Results bulk actions](docs/screenshots/ui-06-results-bulk-actions.png)
+
+### Pagination and downloads
+
+*Screenshot: pagination and **Download CSV** / **Download Excel** links.*
+
+![Pagination and downloads](docs/screenshots/ui-07-pagination-downloads.png)
+
+### Results history tab
+
+*Screenshot: **Recent runs** table (zebra rows, status pills, **Open** in Actions).*
+
+![Run history table](docs/screenshots/ui-08-history-table.png)
+
+### Bulk actions in history
+
+*Screenshot: checked rows, **Select all** / **Delete selected** for runs.*
+
+![History bulk actions](docs/screenshots/ui-09-history-bulk-actions.png)
 
 ---
 
-## Overview (EN)
+## Dashboard capabilities (summary)
 
-Python command-line application for collecting public local business listings from Yellow Pages by business category and city, with multi-page traversal and CSV export, plus an optional FastAPI dashboard.
+| Area | What you can do |
+|------|-----------------|
+| **Launch** | Paste the same CLI line as in the terminal; enable CSV and/or Excel export |
+| **Monitor** | Job status; summary of pages and records |
+| **Results table** | Sort by company name and category; filter; row checkboxes; select all on page; delete selected rows from the current run (on-disk exports refresh when enabled) |
+| **Pagination** | Rows per page (10–100); custom dropdowns match the **Any website** control |
+| **History** | Recent runs; open a run; multi-select; delete finished runs (**queued** / **running** runs are not deleted) |
+| **Downloads** | CSV and XLSX for a completed run that has export files |
 
-The application accepts a search keyword, a US city, and the maximum number of result pages to process. It then opens Yellow Pages search results, extracts listing data, normalizes records, removes duplicates, and exports the final dataset to CSV (and optionally XLSX via the dashboard).
+---
+
+## Overview
+
+The CLI accepts a search keyword, a US city, and a maximum number of result pages. It loads Yellow Pages search results, extracts cards, normalizes fields, removes duplicates, and writes **CSV** (and **XLSX** when using the dashboard with export enabled).
 
 ## Business use cases
 
 - Building structured prospect lists for local service categories
 - Supporting outreach and lead research workflows
 - Reviewing local market coverage in a specific city
-- Collecting business directory data for internal analysis
-- Preparing inputs for downstream qualification or enrichment steps
+- Collecting directory data for internal analysis
+- Feeding downstream qualification or enrichment tools
 
 ## Supported workflow
 
-Current implementation supports:
+- **Source:** Yellow Pages
+- **Search shape:** `keyword + city + max_pages`
+- **CLI export:** CSV
+- **Optional web dashboard (FastAPI):** background jobs; filter/sort/paginate results; row selection and bulk delete within a run; run history with bulk delete; per-run CSV/XLSX download
+- **CLI-first** — the dashboard is optional
 
-- One source: Yellow Pages
-- One search pattern: `keyword + city + max_pages`
-- CLI export: CSV
-- Optional **web dashboard** (FastAPI): run jobs in the background, filter/sort results, row selection and bulk delete from a run, run history with bulk delete, download CSV or XLSX per run
-- CLI-first execution; dashboard is optional
-
-CSV columns:
+Exported columns:
 
 - `company_name`
 - `website`
@@ -140,15 +136,15 @@ CSV columns:
 
 ## Features
 
-- Command-line run `python main.py`
-- Search URL generation for Yellow Pages
-- Multi-page result processing
-- Parsing company listing cards
-- Record normalization before export
+- CLI entrypoint: `python main.py`
+- Yellow Pages search URL construction
+- Multi-page processing
+- Listing card parsing
+- Normalization before export
 - Basic deduplication
-- CSV export
-- Logging to console and file
-- Graceful handling of blocked pages without crashing the full run
+- CSV export; XLSX via dashboard path
+- Console and file logging
+- Continues when individual pages are blocked
 
 ## Project structure
 
@@ -158,6 +154,8 @@ CSV columns:
 ├── requirements.txt
 ├── README.md
 ├── .gitignore
+├── docs/
+│   └── screenshots/ # UI screenshots referenced above (.gitkeep)
 ├── static/
 │   ├── index.html
 │   ├── app.js
@@ -193,12 +191,14 @@ CSV columns:
 Create and activate a virtual environment.
 
 ### macOS / Linux
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 ```
 
 ### Windows
+
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
@@ -211,11 +211,11 @@ pip install -r requirements.txt
 playwright install chromium
 ```
 
-Runtime libraries (see `requirements.txt`): **beautifulsoup4**, **playwright**, **fastapi**, **uvicorn**, **openpyxl** (dashboard + Excel export). Dev/tests: **pytest**. There is **no** `requests` package; see [Fetching: Playwright vs HTTP](#fetching-playwright-vs-http).
+Runtime libraries (see `requirements.txt`): **beautifulsoup4**, **playwright**, **fastapi**, **uvicorn**, **openpyxl** (dashboard + Excel). Tests: **pytest**. There is **no** `requests` dependency; see [Fetching: Playwright vs HTTP](#fetching-playwright-vs-http).
 
 ## Usage
 
-Example run:
+Example CLI run:
 
 ```bash
 python main.py --keyword plumber --city "Austin, TX" --max-pages 3
@@ -229,46 +229,45 @@ Start the API and open the UI in a browser (not as a raw `file://` page):
 uvicorn src.web.app:app --host 127.0.0.1 --port 8000
 ```
 
-Then visit **http://127.0.0.1:8000/** . Paste the same CLI line as in the terminal (or only `--keyword … --city … --max-pages …`). Each run stores artifacts under `output/runs/<run_id>/` (debug HTML/PNG, optional `results.csv` / `results.xlsx`).
+Then open **http://127.0.0.1:8000/**. Paste the same CLI line as in the terminal (or at least `--keyword … --city … --max-pages …`). Each run stores artifacts under `output/runs/<run_id>/` (debug HTML/PNG, optional `results.csv` / `results.xlsx`).
 
-Dashboard API highlights:
+**Dashboard API (high level)**
 
 - `POST /api/runs`, `POST /api/runs/cli` — start runs
-- `GET /api/runs`, `POST /api/runs/delete` — list and delete runs (running/queued runs are skipped)
+- `GET /api/runs`, `POST /api/runs/delete` — list runs; delete runs (**queued** / **running** are skipped)
 - `GET /api/runs/{id}/results` — paginated, filtered, sorted results
-- `POST /api/runs/{id}/results/delete` — remove selected rows from a completed run and refresh exports when enabled
+- `POST /api/runs/{id}/results/delete` — remove selected rows from a run and refresh on-disk exports when exports are enabled
 
-Optional: set **`SCRAPER_OUTPUT_DIR`** to change where run folders are written.
+Optional: set **`SCRAPER_OUTPUT_DIR`** to change the output root for run folders.
 
 ## Output
 
-The application writes generated files into the `output/` directory:
+Typical artifacts under `output/`:
 
-- `yellowpages_results.csv` — final business records
-- `scraper.log` — execution log
-- `debug_search_page_*.html` — saved HTML snapshots
-- `debug_search_page_*.png` — saved page screenshots
+- `yellowpages_results.csv` — aggregated records (CLI-style output)
+- `scraper.log` — log file
+- `debug_search_page_*.html` — HTML snapshots
+- `debug_search_page_*.png` — page screenshots
+
+Per-dashboard-run folder: `output/runs/<run_id>/`.
 
 ## Testing
-
-Run tests with:
 
 ```bash
 pytest
 ```
 
-If `pytest` does not see the `src` package in your environment, the project includes `tests/conftest.py`, which adds the project root to the Python import path before test collection.
+If `pytest` cannot import `src`, use `tests/conftest.py` (adds the project root to `sys.path`).
 
 ## Fetching: Playwright vs HTTP
 
-- **Current design:** search pages are loaded with **Playwright** (Chromium) via `src/browser_client.py`. HTML is then parsed with Beautiful Soup. This matches how Yellow Pages often serves content and anti-bot challenges.
-- **`requests` is not a project dependency.** It was removed to keep the install minimal; the codebase does not ship an alternate HTTP-only client.
-- **If you add a simple HTTP fetch path** (e.g. `requests` + static HTML): add `requests` to `requirements.txt`, implement your client (for example under `src/`), and wire it in `main.py` / the scraper as needed. Document the trade-off (speed vs. reliability) in your fork.
-- **If you only use Playwright** (default): no change required.
+- **Current design:** Playwright (Chromium) loads search pages (`src/browser_client.py`); Beautiful Soup parses HTML. This matches how Yellow Pages often serves content and anti-bot flows.
+- **`requests` is not included.** To add a simple HTTP client, add the dependency, implement a client under `src/`, and document speed vs reliability trade-offs.
+- **Playwright-only (default):** no change required.
 
 ## Operational notes
 
-- Yellow Pages may return Cloudflare block pages during some runs.
-- The scraper is designed to continue processing remaining pages when a single page is blocked.
-- `website` is not guaranteed to be present for every listing.
-- Some address parsing details can be refined further depending on downstream requirements.
+- Yellow Pages may return Cloudflare or other block pages.
+- The scraper continues with remaining pages when one page is blocked.
+- `website` may be empty for some listings.
+- Address parsing can be tuned for your downstream rules.
